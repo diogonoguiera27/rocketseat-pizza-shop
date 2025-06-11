@@ -1,4 +1,7 @@
-import { getManagedRestaurant, GetManagedRestaurantResponse } from "@/api/get-managed-restaurant";
+import {
+  getManagedRestaurant,
+  GetManagedRestaurantResponse,
+} from "@/api/get-managed-restaurant";
 import { Button } from "./ui/button";
 import {
   DialogClose,
@@ -18,20 +21,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { updateProfile } from "@/api/update-profile";
 import { toast } from "sonner";
 
-
 const storeProfileSchema = z.object({
   name: z.string().min(1),
-  description: z.string(),
+  description: z.string().nullable(),
 });
 
 type StoreProfileSchema = z.infer<typeof storeProfileSchema>;
 export function StoreProfileDialog() {
-
-const  queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   const { data: managedRestaurant } = useQuery({
     queryKey: ["managed-restaurant"],
     queryFn: getManagedRestaurant,
-    staleTime:Infinity,
+    staleTime: Infinity,
   });
   const {
     register,
@@ -45,17 +46,39 @@ const  queryClient = useQueryClient()
     },
   });
 
+  function updateManagedRestaurantCache({
+    name,
+    description,
+  }: StoreProfileSchema) {
+    const cached = queryClient.getQueryData<GetManagedRestaurantResponse>([
+      "managed-restaurant",
+    ]);
+
+    if (cached) {
+      queryClient.setQueryData<GetManagedRestaurantResponse>(
+        ["managed-restaurant"],
+        {
+          ...cached,
+          name,
+          description,
+        }
+      );
+    }
+    return {cached}
+  }
+
+  
+
   const { mutateAsync: updateProfilefn } = useMutation({
     mutationFn: updateProfile,
-    onSuccess(_,{name,description}){
-        const cached = queryClient.getQueryData<GetManagedRestaurantResponse>(['managed-restaurant'])
+    onMutate({ name, description }) {
+      const {cached} = updateManagedRestaurantCache({ name, description });
 
-        if(cached){
-            queryClient.setQueryData<GetManagedRestaurantResponse>(['managed-restaurant'],{
-                ...cached,
-                name,
-                description,
-            })
+      return {previousProfile:cached}
+    },
+    onError(_, __,context){
+        if (context?.previousProfile){
+            updateManagedRestaurantCache(context.previousProfile)
         }
     }
   });
