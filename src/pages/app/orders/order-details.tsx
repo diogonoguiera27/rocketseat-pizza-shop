@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
-import { OrderStatus } from "./order-status";
+import { OrderStatus } from "../../../components/order-status";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
