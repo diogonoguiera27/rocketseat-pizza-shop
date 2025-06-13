@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Search, X } from "lucide-react";
+import { Search,  ShoppingCart, X } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { useSearchParams } from "react-router-dom";
 import { z } from "zod";
@@ -139,6 +139,21 @@ export function OrderTableFilters() {
         <X className="h4 w-4 mr-2" />
         Remover Filtros
       </Button>
+
+       {/* Ícone do carrinho fixado no canto direito */}
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="ml-auto"
+      title="Ver carrinho"
+      onClick={() => {
+        // redirecionar para /cart ou abrir modal futuramente
+        console.log("Abrir carrinho");
+      }}
+    >
+      <ShoppingCart className="h-10 w-10 text-white-500" />
+    </Button>
     </form>
   );
 }
