@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getProducts } from "@/api/get-products";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
@@ -18,6 +18,7 @@ import { ShoppingCart } from "lucide-react";
 import { CartModal } from "./CartModal";
 import { ProductTableFilters } from "./products-table-filters";
 import { ProductTableSkeleton } from "./products-table-skeleton";
+import { toast } from "sonner";
 
 // Tipo dos itens do carrinho
 export interface CartItem {
@@ -30,7 +31,19 @@ export interface CartItem {
 export function ProductCatalog() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [cartOpen, setCartOpen] = useState(false);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    try {
+      const storedCart = localStorage.getItem("cartItems");
+      return storedCart ? JSON.parse(storedCart) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const name = searchParams.get("name") ?? "";
   const pageIndex = z.coerce
@@ -38,9 +51,9 @@ export function ProductCatalog() {
     .transform((page) => page - 1)
     .parse(searchParams.get("page") ?? "1");
 
-  const { data: result , isLoading:isLoadingOrders} = useQuery({
-    queryKey: ["products", pageIndex , name],
-    queryFn: () => getProducts({ pageIndex , name }),
+  const { data: result, isLoading: isLoadingOrders } = useQuery({
+    queryKey: ["products", pageIndex, name],
+    queryFn: () => getProducts({ pageIndex, name }),
   });
 
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -83,6 +96,7 @@ export function ProductCatalog() {
     });
 
     setQuantities((prev) => ({ ...prev, [product.id]: 1 }));
+    toast.success(`adicionado ao carrinho!`);
   }
 
   function handlePaginate(pageIndex: number) {
@@ -126,6 +140,22 @@ export function ProductCatalog() {
           onOpenChange={setCartOpen}
           items={cartItems}
           onClear={() => setCartItems([])}
+          onRemoveItem={(productId) =>
+            setCartItems((items) => {
+              return items
+                .map((item) => {
+                  if (item.id === productId) {
+                    if (item.quantity > 1) {
+                      return { ...item, quantity: item.quantity - 1 };
+                    } else {
+                      return null; // será removido no filter abaixo
+                    }
+                  }
+                  return item;
+                })
+                .filter((item): item is CartItem => item !== null);
+            })
+          }
         />
 
         <div className="border rounded-md">
@@ -139,7 +169,7 @@ export function ProductCatalog() {
               </TableRow>
             </TableHeader>
             <TableBody>
-                {isLoadingOrders && <ProductTableSkeleton/>}
+              {isLoadingOrders && <ProductTableSkeleton />}
               {result?.products.map((product) => {
                 const quantity = quantities[product.id] ?? 1;
                 const total = (product.priceInCents * quantity) / 100;

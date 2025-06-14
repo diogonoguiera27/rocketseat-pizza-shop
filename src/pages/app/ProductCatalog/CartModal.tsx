@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { createOrder } from "@/api/create-order";
 import { useManagedRestaurant } from "@/hooks/use-managed-restaurant";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 
 export interface CartItem {
   id: string;
@@ -22,9 +23,10 @@ interface CartModalProps {
   onOpenChange: (open: boolean) => void;
   items: CartItem[];
   onClear: () => void;
+  onRemoveItem: (productId: string) => void;
 }
 
-export function CartModal({ open, onOpenChange, items, onClear }: CartModalProps) {
+export function CartModal({ open, onOpenChange, items, onClear, onRemoveItem }: CartModalProps) {
   const { managedRestaurant } = useManagedRestaurant();
 
   const total = items.reduce(
@@ -76,12 +78,23 @@ export function CartModal({ open, onOpenChange, items, onClear }: CartModalProps
                   })}
                 </p>
               </div>
-              <p className="font-semibold text-right">
-                {((item.price * item.quantity) / 100).toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                })}
-              </p>
+
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-right">
+                  {((item.price * item.quantity) / 100).toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </p>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-red-500 hover:text-red-700"
+                  onClick={() => onRemoveItem(item.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           ))}
 
