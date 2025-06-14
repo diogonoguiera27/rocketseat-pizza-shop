@@ -12,7 +12,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-// ✅ Zod schema ajustado (sem descrição)
+import { createProduct } from "@/api/create-product";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 const createProductSchema = z.object({
   name: z.string().min(1, "Nome do produto é obrigatório"),
   price: z.string().min(1, "Preço é obrigatório"),
@@ -26,14 +29,29 @@ export function CreateProductModal() {
     register,
     handleSubmit,
     formState: { isSubmitting, errors },
+    reset,
   } = useForm<CreateProductSchema>({
     resolver: zodResolver(createProductSchema),
   });
 
+  const { mutateAsync } = useMutation({
+    mutationFn: createProduct,
+    onSuccess: () => {
+      toast.success("Produto criado com sucesso!");
+      reset();
+    },
+    onError: () => {
+      toast.error("Erro ao criar produto");
+    },
+  });
+
   async function handleCreateProduct(data: CreateProductSchema) {
     try {
-      console.log(data);
-      // TODO: implementar lógica de criação do produto no backend
+      await mutateAsync({
+        name: data.name,
+        priceInCents: Math.round(parseFloat(data.price) * 100),
+        // Remover "stock" se sua API realmente não exige
+      });
     } catch (error) {
       console.error(error);
     }
