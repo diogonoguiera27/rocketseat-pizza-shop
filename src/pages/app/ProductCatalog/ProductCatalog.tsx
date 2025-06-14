@@ -16,6 +16,7 @@ import { z } from "zod";
 import { Pagination } from "@/components/Pagination";
 import { ShoppingCart } from "lucide-react";
 import { CartModal } from "./CartModal";
+import { ProductTableFilters } from "./products-table-filters";
 
 // Tipo dos itens do carrinho
 export interface CartItem {
@@ -30,14 +31,15 @@ export function ProductCatalog() {
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
+  const name = searchParams.get("name") ?? "";
   const pageIndex = z.coerce
     .number()
     .transform((page) => page - 1)
     .parse(searchParams.get("page") ?? "1");
 
   const { data: result } = useQuery({
-    queryKey: ["products", pageIndex],
-    queryFn: () => getProducts({ pageIndex }),
+    queryKey: ["products", pageIndex , name],
+    queryFn: () => getProducts({ pageIndex , name }),
   });
 
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -115,6 +117,8 @@ export function ProductCatalog() {
             )}
           </div>
         </div>
+
+        <ProductTableFilters />
 
         <CartModal
           open={cartOpen}
