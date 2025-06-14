@@ -17,6 +17,7 @@ import { Pagination } from "@/components/Pagination";
 import { ShoppingCart } from "lucide-react";
 import { CartModal } from "./CartModal";
 import { ProductTableFilters } from "./products-table-filters";
+import { ProductTableSkeleton } from "./products-table-skeleton";
 
 // Tipo dos itens do carrinho
 export interface CartItem {
@@ -37,7 +38,7 @@ export function ProductCatalog() {
     .transform((page) => page - 1)
     .parse(searchParams.get("page") ?? "1");
 
-  const { data: result } = useQuery({
+  const { data: result , isLoading:isLoadingOrders} = useQuery({
     queryKey: ["products", pageIndex , name],
     queryFn: () => getProducts({ pageIndex , name }),
   });
@@ -138,6 +139,7 @@ export function ProductCatalog() {
               </TableRow>
             </TableHeader>
             <TableBody>
+                {isLoadingOrders && <ProductTableSkeleton/>}
               {result?.products.map((product) => {
                 const quantity = quantities[product.id] ?? 1;
                 const total = (product.priceInCents * quantity) / 100;
