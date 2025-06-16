@@ -1,4 +1,4 @@
-import { Home,  PackagePlus, Pizza, ScrollText, UtensilsCrossed } from "lucide-react";
+import { Home, Pizza, ScrollText, UtensilsCrossed } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { NavLink } from "./nav-link";
 import { ThemeToggle } from "./theme/theme-toglle";
@@ -21,11 +21,6 @@ export function  Header() {
                 <NavLink to="/orders">
                    <UtensilsCrossed className="h-4 w-4"/>
                    Pedidos
-                </NavLink>
-
-                <NavLink to="/Products">
-                   <PackagePlus className="h-4 w-4"/>
-                   Criar Produto
                 </NavLink>
                 <NavLink to="/ProductCatalog">
                    <ScrollText className="h-4 w-4"/>

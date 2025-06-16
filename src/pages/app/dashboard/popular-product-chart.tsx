@@ -6,8 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPopularProducts } from "@/api/get-popular-products";
 import { useQuery } from "@tanstack/react-query";
 
-
-
 const COLORS = [
   colors.sky[500],
   colors.amber[500],
@@ -17,14 +15,33 @@ const COLORS = [
 ];
 
 export function PopularProductsChart() {
-  const { data: popularProducts } = useQuery({
+  const { data: popularProducts, isLoading } = useQuery({
     queryKey: ["metrics", "popular-products"],
     queryFn: getPopularProducts,
+    refetchOnMount: true,
   });
+
+  const sanitizedData = [...(popularProducts ?? [])]
+    .map((p) => ({
+      ...p,
+      amount: Number(p.amount),
+    }))
+    .filter((p) => !isNaN(p.amount) && p.amount > 0)
+    .sort((a, b) => b.amount - a.amount);
+
+  const topProducts = sanitizedData.slice(0, 4);
+  const otherProducts = sanitizedData.slice(4);
+  const totalOthers = otherProducts.reduce((sum, p) => sum + p.amount, 0);
+
+  const chartData = [
+    ...topProducts,
+    ...(totalOthers > 0 ? [{ product: "Outros", amount: totalOthers }] : []),
+  ];
+
   return (
     <Card className="col-span-3">
       <CardHeader className="pb-8">
-        <div className="flex items-center justify-between ">
+        <div className="flex items-center justify-between">
           <CardTitle className="text-base font-medium">
             Produtos populares
           </CardTitle>
@@ -32,11 +49,15 @@ export function PopularProductsChart() {
         </div>
       </CardHeader>
       <CardContent>
-        {popularProducts ? (
+        {isLoading ? (
+          <div className="flex h-[240px] w-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
           <ResponsiveContainer width="100%" height={240}>
             <PieChart style={{ fontSize: 12 }}>
               <Pie
-                data={popularProducts}
+                data={chartData}
                 nameKey="product"
                 dataKey="amount"
                 cx="50%"
@@ -45,15 +66,7 @@ export function PopularProductsChart() {
                 innerRadius={64}
                 strokeWidth={8}
                 labelLine={false}
-                label={({
-                  cx,
-                  cy,
-                  midAngle,
-                  innerRadius,
-                  outerRadius,
-                  value,
-                  index,
-                }) => {
+                label={({ cx, cy, midAngle, innerRadius, outerRadius, value, index }) => {
                   const RADIAN = Math.PI / 180;
                   const radius = 12 + innerRadius + (outerRadius - innerRadius);
                   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -67,30 +80,24 @@ export function PopularProductsChart() {
                       textAnchor={x > cx ? "start" : "end"}
                       dominantBaseline="central"
                     >
-                      {popularProducts[index].product.length > 12
-                        ? popularProducts[index].product.substring(0, 12).concat("...")
-                        : popularProducts[index].product}{" "}
+                      {chartData[index].product.length > 12
+                        ? chartData[index].product.substring(0, 12) + "..."
+                        : chartData[index].product}{" "}
                       ({value})
                     </text>
                   );
                 }}
               >
-                {popularProducts.map((_, index) => {
-                  return (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index]}
-                      className="stroke-background hover:opacity-80"
-                    />
-                  );
-                })}
+                {chartData.map((_, index) => (
+                  <Cell
+                    key={`cell-${chartData[index].product}-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                    className="stroke-background hover:opacity-80"
+                  />
+                ))}
               </Pie>
             </PieChart>
           </ResponsiveContainer>
-         ) : (
-          <div className="flex h-[240px] w-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
         )}
       </CardContent>
     </Card>

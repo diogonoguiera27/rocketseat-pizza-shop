@@ -13,8 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 import { createProduct } from "@/api/create-product";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
+interface CreateProductModalProps {
+  onClose: () => void;
+}
 
 const createProductSchema = z.object({
   name: z.string().min(1, "Nome do produto é obrigatório"),
@@ -24,7 +28,9 @@ const createProductSchema = z.object({
 
 type CreateProductSchema = z.infer<typeof createProductSchema>;
 
-export function CreateProductModal() {
+export function CreateProductModal({ onClose }: CreateProductModalProps) {
+  const queryClient = useQueryClient();
+
   const {
     register,
     handleSubmit,
@@ -39,6 +45,8 @@ export function CreateProductModal() {
     onSuccess: () => {
       toast.success("Produto criado com sucesso!");
       reset();
+      onClose();
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
     onError: () => {
       toast.error("Erro ao criar produto");
@@ -50,7 +58,6 @@ export function CreateProductModal() {
       await mutateAsync({
         name: data.name,
         priceInCents: Math.round(parseFloat(data.price) * 100),
-        // Remover "stock" se sua API realmente não exige
       });
     } catch (error) {
       console.error(error);
@@ -75,9 +82,7 @@ export function CreateProductModal() {
             placeholder="Ex: Refrigerante"
           />
           {errors.name && (
-            <span className="text-sm text-red-500">
-              {errors.name.message}
-            </span>
+            <span className="text-sm text-red-500">{errors.name.message}</span>
           )}
         </div>
 

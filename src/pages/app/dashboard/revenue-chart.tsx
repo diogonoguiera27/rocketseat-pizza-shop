@@ -6,9 +6,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import {
   ResponsiveContainer,
@@ -20,11 +22,20 @@ import {
 } from "recharts";
 
 import colors from "tailwindcss/colors";
+import {DateRange} from 'react-day-picker'
+import {subDays} from 'date-fns'
 
 export function RevenueChart() {
+  const [dateRange,setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(),7),
+    to: new Date(),
+  })
   const { data: dailyRevenueInPeriod } = useQuery({
-    queryKey: ["metrics", "daily-revenue-in-period"],
-    queryFn: getDailyRevenueInPeriod,
+    queryKey: ["metrics", "daily-revenue-in-period",dateRange],
+    queryFn: () => getDailyRevenueInPeriod({
+      from:dateRange?.from,
+      to:dateRange?.to,
+    })
   });
 
   const chartData = useMemo(() => {
@@ -44,6 +55,10 @@ export function RevenueChart() {
           </CardTitle>
           <CardDescription>Receita diaria no periodo</CardDescription>
         </div>
+        <div className="flex items-center gap-3">
+          <Label></Label>
+          <DateRangePicker date={dateRange} onDateChange={setDateRange} />
+        </div> 
       </CardHeader>
       <CardContent>
         {chartData ? (

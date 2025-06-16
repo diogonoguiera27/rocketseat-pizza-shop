@@ -1,3 +1,5 @@
+// Atualização da listagem de produtos com modal de criação incluso ao lado do carrinho
+
 import {
   Table,
   TableBody,
@@ -14,13 +16,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { Pagination } from "@/components/Pagination";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, PlusCircle } from "lucide-react";
 import { CartModal } from "./CartModal";
 import { ProductTableFilters } from "./products-table-filters";
 import { ProductTableSkeleton } from "./products-table-skeleton";
 import { toast } from "sonner";
+import { Dialog } from "@/components/ui/dialog";
+import { CreateProductModal } from "./../CreateProducts/CreateProductModal";
 
-// Tipo dos itens do carrinho
 export interface CartItem {
   id: string;
   name: string;
@@ -31,6 +34,7 @@ export interface CartItem {
 export function ProductCatalog() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [cartOpen, setCartOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     try {
@@ -96,7 +100,7 @@ export function ProductCatalog() {
     });
 
     setQuantities((prev) => ({ ...prev, [product.id]: 1 }));
-    toast.success(`adicionado ao carrinho!`);
+    toast.success(`Adicionado ao carrinho!`);
   }
 
   function handlePaginate(pageIndex: number) {
@@ -115,25 +119,40 @@ export function ProductCatalog() {
             Catálogo de Produtos
           </h1>
 
-          <div className="relative">
+          <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCartOpen(true)}
-              title="Abrir carrinho"
+              variant="outline"
+              onClick={() => setCreateModalOpen(true)}
+              className="flex items-center gap-2"
             >
-              <ShoppingCart className="h-6 w-6 text-white" />
+              <PlusCircle className="w-4 h-4" />
+              Criar Produto
             </Button>
 
-            {cartItems.length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {cartItems.reduce((total, item) => total + item.quantity, 0)}
-              </span>
-            )}
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCartOpen(true)}
+                title="Abrir carrinho"
+              >
+                <ShoppingCart className="h-6 w-6 text-white" />
+              </Button>
+
+              {cartItems.length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartItems.reduce((total, item) => total + item.quantity, 0)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
         <ProductTableFilters />
+
+        <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
+          <CreateProductModal onClose={() => setCreateModalOpen(false)} />
+        </Dialog>
 
         <CartModal
           open={cartOpen}
@@ -148,7 +167,7 @@ export function ProductCatalog() {
                     if (item.quantity > 1) {
                       return { ...item, quantity: item.quantity - 1 };
                     } else {
-                      return null; // será removido no filter abaixo
+                      return null;
                     }
                   }
                   return item;
