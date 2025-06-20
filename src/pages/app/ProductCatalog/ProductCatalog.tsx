@@ -184,7 +184,7 @@ export function ProductCatalog() {
                 <TableHead>Produto</TableHead>
                 <TableHead className="text-right">Preço</TableHead>
                 <TableHead className="text-center">Quantidade</TableHead>
-                <TableHead className="text-center"></TableHead>
+                <TableHead className="text-"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -251,7 +251,7 @@ export function ProductCatalog() {
                       </div>
                     </TableCell>
 
-                    <TableCell className="text-center">
+                    <TableCell className="text-center" >
                       <Button
                         variant="default"
                         className="bg-red-600 hover:bg-red-700 w-[200px] flex justify-between"
